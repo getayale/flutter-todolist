@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import 'providers/theme_provider.dart';
 import 'task.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -11,9 +18,27 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    final themeProvider = context.watch<ThemeProvider>();
+
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomeScreen(),
+      title: 'TodoList',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.teal,
+          brightness: Brightness.light,
+        ),
+        useMaterial3: true,
+      ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.teal,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
+      themeMode: themeProvider.themeMode,
+      home: const HomeScreen(),
     );
   }
 }
@@ -39,6 +64,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final isDarkMode = themeProvider.isDarkMode;
+
     final filteredTasks = tasks.where((task) {
       if (selectedFilter == 'Pending') {
         return !task.isCompleted;
@@ -59,8 +87,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 68, 71, 71),
-        foregroundColor: Colors.white,
         elevation: 4,
         title: Row(
           children: [
@@ -92,7 +118,6 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               icon: const Icon(Icons.list_alt),
               label: const Text('My Task'),
-              style: TextButton.styleFrom(foregroundColor: Colors.white),
             ),
             TextButton.icon(
               onPressed: () {
@@ -102,7 +127,15 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               icon: const Icon(Icons.check_circle_outline),
               label: const Text('Completed'),
-              style: TextButton.styleFrom(foregroundColor: Colors.white),
+            ),
+            IconButton(
+              onPressed: () {
+                context.read<ThemeProvider>().toggleTheme();
+              },
+              icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
+              tooltip: isDarkMode
+                  ? 'Switch to light mode'
+                  : 'Switch to dark mode',
             ),
           ],
         ),
@@ -134,10 +167,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: isSelected
                             ? Colors.teal
-                            : Colors.grey.shade200,
+                            : Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest,
                         foregroundColor: isSelected
                             ? Colors.white
-                            : Colors.black87,
+                            : Theme.of(context).colorScheme.onSurface,
                         elevation: isSelected ? 3 : 0,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
@@ -163,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ? Icons.task_alt
                               : Icons.checklist,
                           size: 60,
-                          color: Colors.grey,
+                          color: Theme.of(context).colorScheme.outline,
                         ),
                         const SizedBox(height: 12),
                         Text(
@@ -172,9 +207,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               : selectedFilter == 'Pending'
                               ? 'No pending tasks'
                               : 'No completed tasks',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
-                            color: Colors.grey,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -221,21 +258,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 flex: 1,
                 child: Container(
                   height: 50,
-                  color: const Color.fromARGB(255, 102, 156, 165),
+                  color: isDarkMode
+                      ? const Color(0xFF34565B)
+                      : const Color.fromARGB(255, 102, 156, 165),
                 ),
               ),
               Expanded(
                 flex: 2,
                 child: Container(
                   height: 50,
-                  color: const Color.fromARGB(255, 62, 124, 103),
+                  color: isDarkMode
+                      ? const Color(0xFF285846)
+                      : const Color.fromARGB(255, 62, 124, 103),
                 ),
               ),
               Expanded(
                 flex: 1,
                 child: Container(
                   height: 50,
-                  color: const Color.fromARGB(255, 67, 88, 88),
+                  color: isDarkMode
+                      ? const Color(0xFF374747)
+                      : const Color.fromARGB(255, 67, 88, 88),
                 ),
               ),
             ],
